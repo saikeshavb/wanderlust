@@ -1,0 +1,66 @@
+<% layout("/layouts/boilerplate.ejs") %>
+<!-- <%=success%> -->
+<body>
+    <div class="allListings">
+        <div class="filters">
+            <div class="filter">
+                <i class="fa-solid fa-fire-flame-curved"></i>
+                <p>Trending</p>
+            </div>
+            <div class="filter">
+                <i class="fa-solid fa-water-ladder"></i>
+                <p>Pools</p>
+            </div>
+            <div class="filter">
+                <i class="fa-solid fa-water"></i>
+                <p>lake</p>
+            </div>
+            <div class="filter">
+                <i class="fa-solid fa-umbrella-beach"></i>
+                <p>Beach Front</p>
+            </div>
+            <div class="filter">
+                <i class="fa-solid fa-mountain-sun"></i>
+                <p>Mountains</p>
+            </div>
+            <div class="filter">
+                <i class="fa-solid fa-tractor"></i>
+                <p>Farms</p>
+            </div>
+            <div class="filter">
+                <i class="fa-solid fa-igloo"></i>
+                <p>Domet</p>
+            </div>
+            <div class="filter">
+                <i class="fa-solid fa-ticket"></i>
+                <p>Icons</p>
+            </div>
+            
+        </div>
+        <!-- <form method="GET" action="/listings/new">
+            <button>New</button>
+        </form> -->
+        <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1">
+            <% for(let list of allLists){%>
+                <a href="/listings/<%=list._id%>" class="list-links">
+                <div class="card listing-card col">
+                    <img src="<%=list.image.url%>" class="card-img-top" alt="..." style="height:20rem">
+                    <div class="card-img-overlay"></div>
+                    <div class="card-body">
+                    <p class="card-text">
+                        <b><%=list.title%></b>
+                        <br>
+                        &#8377;<%= (list.price ?list.price.toLocaleString("en-IN") : 'Price not available') %> /night
+                    </p>
+                    </div>
+                </div>
+                </a>
+            <%}%>
+        </div>
+        <!-- <ul>
+            <%for(let list of allLists){%>
+                <li><a href="/listings/<%=list._id%>"><%= list.title %></a></li>  
+            <%}%>
+        </ul> -->
+    </div>
+</body>
