@@ -16,6 +16,7 @@ const Review=require("./models/review.js");
 const listingsRouter=require("./routes/listing.js");
 const reviewsRouter=require("./routes/review.js");
 const userRouter=require("./routes/user.js");
+const paymentRouter=require("./routes/payment.js");
 const session=require("express-session");
 const MongoStore = require('connect-mongo');
 const flash=require("connect-flash");
@@ -78,7 +79,7 @@ const sessionOptions={
 }
 
 app.get("/",(req,res)=>{
-    res.send("hello world")
+    res.render("listings/index.ejs");
 });
 
 app.use(session(sessionOptions));
@@ -101,6 +102,7 @@ app.use((req,res,next)=>{
 app.use("/listings",listingsRouter);
 app.use("/listings/:id/reviews",reviewsRouter);
 app.use("/",userRouter);
+app.use("/payment",paymentRouter);
 
 
 

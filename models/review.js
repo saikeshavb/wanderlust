@@ -4,6 +4,10 @@ const Schema=mongoose.Schema;
 
 const reviewSchema=new Schema({
     comment:String,
+    name:{
+        type:String,
+        required:true
+    },
     rating:{
         type:Number,
         min:1,
@@ -11,8 +15,8 @@ const reviewSchema=new Schema({
     },
     created_at:{
         type:Date,
-        default:Date.now()
+        default:Date.now
     },
 })
 
-module.exports=mongoose.model("Review",reviewSchema);
+module.exports=mongoose.model("Review", reviewSchema);

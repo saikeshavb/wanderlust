@@ -5,12 +5,14 @@ const ExpressError=require("../util/ExpressError.js")
 const wrapAsync=require("../util/wrapAsync.js");
 const {listingSchema}=require("../schema.js");
 const Review=require("../models/review.js");
+const {isLoggedIn}=require("../middleware.js");
 
 
-router.post("/",async(req,res)=>{
+router.post("/",isLoggedIn,async(req,res)=>{
     let {id}=req.params;
     let listing=await Listing.findById(id);
     let newReview=new Review(req.body.review);
+    newReview.name=req.user.username; // Set the name of the reviewer
     listing.reviews.push(newReview);
 
     await newReview.save();

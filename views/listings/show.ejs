@@ -25,6 +25,49 @@
                     </form>
                 </div>
             <%}%>
+
+            <!-- Booking Section -->
+            <%if(!currUser || !currUser._id.equals(listing.owner._id)){%>
+                <div class="card mt-4 mb-3" style="border: 2px solid #28a745;">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">Book Your Stay</h5>
+                        <p class="card-text">&#8377; <strong><%= listing.price.toLocaleString("en-IN") %> per night</strong></p>
+                        
+                        <form id="bookingForm" class="needs-validation" novalidate>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="checkInDate" class="form-label">Check-in Date</label>
+                                    <input type="date" class="form-control" id="checkInDate" name="checkInDate" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="checkOutDate" class="form-label">Check-out Date</label>
+                                    <input type="date" class="form-control" id="checkOutDate" name="checkOutDate" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <p class="text-muted">
+                                    <strong>Number of Nights:</strong> <span id="numberOfNights">0</span>
+                                </p>
+                                <p class="text-success">
+                                    <strong>Total Price:</strong> &#8377; <span id="totalPrice">0</span>
+                                </p>
+                            </div>
+
+                            <%if(currUser){%>
+                                <button type="submit" class="btn btn-success btn-lg w-100">
+                                    <i class="fas fa-calendar-check"></i> Proceed to Book
+                                </button>
+                            <%} else {%>
+                                <a href="/login" class="btn btn-success btn-lg w-100">
+                                    <i class="fas fa-sign-in-alt"></i> Login to Book
+                                </a>
+                            <%}%>
+                        </form>
+                    </div>
+                </div>
+            <%}%>
+
             <hr/>
             <div class="mb-3 mt-3">
                 <h4>Leave a Review!</h4>
@@ -59,7 +102,7 @@
                     <% for(review of listing.reviews){%>
                         <div class="card col-5 mt-2 ms-2" >
                             <div class="card-body">
-                                <h5 class="card-title">Keshav</h5>
+                                <h5 class="card-title"></h5>
                                 <p class="card-text"><%=review.comment%></p>
                                 <p class="starability-result card-text" data-rating=<%=review.rating%>></p>
                             </div>
@@ -75,6 +118,7 @@
         <div id='map'></div>
     </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
 <script>
     let mapToken="<%=process.env.MAP_TOKEN%>";
     console.log(mapToken);
@@ -84,5 +128,58 @@
         style: "mapbox://styles/mapbox/streets-v12",
         zoom: 9,
         center: [78.4772, 17.4065]
+    });
+
+    // Booking form calculations
+    const checkInInput = document.getElementById('checkInDate');
+    const checkOutInput = document.getElementById('checkOutDate');
+    const bookingForm = document.getElementById('bookingForm');
+
+    const pricePerNight = Number("<%= listing.price %>");
+
+    function calculatePrice() {
+        if (checkInInput.value && checkOutInput.value) {
+            const checkIn = new Date(checkInInput.value);
+            const checkOut = new Date(checkOutInput.value);
+            
+            if (checkOut > checkIn) {
+                const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+                const totalPrice = nights * pricePerNight;
+                
+                document.getElementById('numberOfNights').textContent = nights;
+                document.getElementById('totalPrice').textContent = totalPrice.toLocaleString("en-IN");
+            }
+        }
+    }
+
+    checkInInput.addEventListener('change', calculatePrice);
+    checkOutInput.addEventListener('change', calculatePrice);
+
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    checkInInput.setAttribute('min', today);
+    checkOutInput.setAttribute('min', today);
+
+    bookingForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!checkInInput.value || !checkOutInput.value) {
+            alert('Please select both check-in and check-out dates');
+            return;
+        }
+
+        const checkIn = new Date(checkInInput.value);
+        const checkOut = new Date(checkOutInput.value);
+
+        if (checkOut <= checkIn) {
+            alert('Check-out date must be after check-in date');
+            return;
+        }
+
+        const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+        const totalPrice = nights * pricePerNight;
+
+        // Redirect to checkout
+        window.location.href = `/payment/<%= listing._id %>/checkout?checkInDate=${checkInInput.value}&checkOutDate=${checkOutInput.value}&numberOfNights=${nights}`;
     });
 </script>
