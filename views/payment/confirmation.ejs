@@ -1,0 +1,196 @@
+<%- layout('layouts/boilerplate') %>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <% if(payment && payment.status === 'succeeded') { %>
+                <!-- Success Message -->
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i> <strong>Payment Successful!</strong>
+                    Your booking has been confirmed.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body text-center">
+                        <i class="fas fa-check-circle text-success" style="font-size: 3rem;"></i>
+                        <h2 class="mt-3 text-success">Booking Confirmed!</h2>
+                        <p class="text-muted">Your reservation has been confirmed</p>
+                    </div>
+                </div>
+            <% } else if(payment && payment.status === 'failed') { %>
+                <!-- Failed Message -->
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-times-circle"></i> <strong>Payment Failed!</strong>
+                    <%= payment.failureReason %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body text-center">
+                        <i class="fas fa-times-circle text-danger" style="font-size: 3rem;"></i>
+                        <h2 class="mt-3 text-danger">Payment Failed</h2>
+                        <p class="text-muted">Please try again or use a different payment method</p>
+                    </div>
+                </div>
+            <% } else { %>
+                <!-- Processing -->
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="fas fa-spinner fa-spin"></i> <strong>Processing...</strong>
+                    Your payment is being processed. Please wait.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            <% } %>
+
+            <!-- Order Details -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Order Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Order ID:</strong></p>
+                            <p class="text-muted"><%= order._id %></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Status:</strong></p>
+                            <p>
+                                <% if(order.status === 'confirmed') { %>
+                                    <span class="badge bg-success">Confirmed</span>
+                                <% } else if(order.status === 'cancelled') { %>
+                                    <span class="badge bg-danger">Cancelled</span>
+                                <% } else { %>
+                                    <span class="badge bg-warning">Pending</span>
+                                <% } %>
+                            </p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Listing Information -->
+                    <h6 class="mb-3">Property</h6>
+                    <p class="mb-2">
+                        <strong><%= order.listing.title %></strong>
+                    </p>
+                    <p class="text-muted mb-3">
+                        <%= order.listing.location %>, <%= order.listing.country %>
+                    </p>
+
+                    <!-- Booking Dates -->
+                    <h6 class="mb-3">Booking Dates</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <p><strong>Check-in:</strong></p>
+                            <p class="text-muted"><%= new Date(order.checkInDate).toLocaleDateString() %></p>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <p><strong>Check-out:</strong></p>
+                            <p class="text-muted"><%= new Date(order.checkOutDate).toLocaleDateString() %></p>
+                        </div>
+                    </div>
+
+                    <p class="mb-3">
+                        <strong>Number of Nights:</strong> <%= order.numberOfNights %>
+                    </p>
+
+                    <hr>
+
+                    <!-- Guest Information -->
+                    <h6 class="mb-3">Guest Information</h6>
+                    <p class="mb-2">
+                        <strong>Name:</strong> <%= order.guestName %>
+                    </p>
+                    <p class="mb-2">
+                        <strong>Email:</strong> <%= order.guestEmail %>
+                    </p>
+                    <p class="mb-2">
+                        <strong>Phone:</strong> <%= order.guestPhone %>
+                    </p>
+                    <p class="mb-2">
+                        <strong>Address:</strong> 
+                        <%= order.guestAddress %>, <%= order.guestCity %>, 
+                        <%= order.guestState %> <%= order.guestZipCode %>, 
+                        <%= order.guestCountry %>
+                    </p>
+
+                    <hr>
+
+                    <!-- Payment Summary -->
+                    <h6 class="mb-3">Payment Summary</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Price per Night:</span>
+                        <span>${<%= order.pricePerNight %></span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Number of Nights:</span>
+                        <span><%= order.numberOfNights %></span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span>${<%= order.pricePerNight * order.numberOfNights %></span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>Service Fee:</span>
+                        <span class="text-success">Free</span>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between">
+                        <h5>Total Amount Paid:</h5>
+                        <h5 class="text-success">${<%= order.totalPrice %></h5>
+                    </div>
+
+                    <% if(payment) { %>
+                        <hr>
+                        <p class="text-muted mt-3 mb-0">
+                            <strong>Transaction ID:</strong> <%= payment.transactionId || payment.stripePaymentIntentId %>
+                        </p>
+                        <p class="text-muted mb-0">
+                            <strong>Payment Date:</strong> <%= payment.paymentDate ? new Date(payment.paymentDate).toLocaleString() : 'Pending' %>
+                        </p>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex gap-2 mb-4">
+                <a href="/listings" class="btn btn-primary flex-grow-1">
+                    <i class="fas fa-list"></i> Continue Browsing
+                </a>
+                <a href="/payment/my-orders" class="btn btn-outline-primary flex-grow-1">
+                    <i class="fas fa-history"></i> My Bookings
+                </a>
+                <% if(order.status === 'confirmed') { %>
+                    <form method="POST" action="/payment/<%= order._id %>/cancel" style="display:inline;" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="fas fa-times"></i> Cancel Booking
+                        </button>
+                    </form>
+                <% } %>
+            </div>
+
+            <!-- Additional Information -->
+            <div class="alert alert-info">
+                <h6 class="alert-heading">Important Information</h6>
+                <ul class="mb-0">
+                    <li>A confirmation email has been sent to <%= order.guestEmail %></li>
+                    <li>Please arrive 15 minutes before your check-in time</li>
+                    <li>Check-in is typically after 3:00 PM and check-out before 11:00 AM</li>
+                    <li>For cancellations, you may be eligible for a refund based on the cancellation policy</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-refresh if payment is still processing
+    <% if(!payment || (payment && payment.status === 'pending')) { %>
+        setTimeout(() => {
+            location.reload();
+        }, 3000);
+    <% } %>
+</script>

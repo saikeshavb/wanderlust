@@ -1,0 +1,233 @@
+<%- layout('layouts/boilerplate') %>
+
+<div class="container my-5">
+    <h2 class="mb-4">My Bookings</h2>
+
+    <% if(orders.length === 0) { %>
+        <div class="alert alert-info text-center">
+            <i class="fas fa-inbox"></i>
+            <p class="mb-0 mt-2">You haven't made any bookings yet.</p>
+            <a href="/listings" class="btn btn-primary mt-3">Browse Listings</a>
+        </div>
+    <% } else { %>
+        <!-- Tab Navigation -->
+        <ul class="nav nav-tabs mb-4" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-content" type="button" role="tab">
+                    All Bookings (<%= orders.length %>)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="confirmed-tab" data-bs-toggle="tab" data-bs-target="#confirmed-content" type="button" role="tab">
+                    Confirmed (<%= orders.filter(o => o.status === 'confirmed').length %>)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending-content" type="button" role="tab">
+                    Pending (<%= orders.filter(o => o.status === 'pending').length %>)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="cancelled-tab" data-bs-toggle="tab" data-bs-target="#cancelled-content" type="button" role="tab">
+                    Cancelled (<%= orders.filter(o => o.status === 'cancelled').length %>)
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- All Bookings -->
+            <div class="tab-pane fade show active" id="all-content" role="tabpanel">
+                <% orders.forEach(order => { %>
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- Listing Image -->
+                                <div class="col-md-2">
+                                    <img src="<%= order.listing.image.url %>" alt="<%= order.listing.title %>" class="img-fluid rounded" style="height: 150px; object-fit: cover;">
+                                </div>
+
+                                <!-- Booking Details -->
+                                <div class="col-md-5">
+                                    <h5 class="mb-2"><%= order.listing.title %></h5>
+                                    <p class="text-muted mb-2">
+                                        <i class="fas fa-map-marker-alt"></i> 
+                                        <%= order.listing.location %>, <%= order.listing.country %>
+                                    </p>
+                                    <p class="mb-1">
+                                        <strong>Check-in:</strong> <%= new Date(order.checkInDate).toLocaleDateString() %>
+                                    </p>
+                                    <p class="mb-1">
+                                        <strong>Check-out:</strong> <%= new Date(order.checkOutDate).toLocaleDateString() %>
+                                    </p>
+                                    <p class="mb-0">
+                                        <strong>Nights:</strong> <%= order.numberOfNights %>
+                                    </p>
+                                </div>
+
+                                <!-- Status and Amount -->
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <strong>Status:</strong><br>
+                                        <% if(order.status === 'confirmed') { %>
+                                            <span class="badge bg-success">Confirmed</span>
+                                        <% } else if(order.status === 'pending') { %>
+                                            <span class="badge bg-warning">Pending</span>
+                                        <% } else if(order.status === 'cancelled') { %>
+                                            <span class="badge bg-danger">Cancelled</span>
+                                        <% } else { %>
+                                            <span class="badge bg-secondary">Completed</span>
+                                        <% } %>
+                                    </div>
+                                    <div>
+                                        <strong>Total Amount:</strong><br>
+                                        <h6 class="text-primary">$<%= order.totalPrice %></h6>
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="col-md-2 text-end">
+                                    <a href="/payment/confirm/<%= order._id %>" class="btn btn-sm btn-outline-primary mb-2 w-100">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </a>
+                                    <% if(order.status === 'confirmed') { %>
+                                        <form method="POST" action="/payment/<%= order._id %>/cancel" onsubmit="return confirm('Are you sure you want to cancel this booking? This action cannot be undone.');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                                                <i class="fas fa-times"></i> Cancel
+                                            </button>
+                                        </form>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+
+            <!-- Confirmed Bookings -->
+            <div class="tab-pane fade" id="confirmed-content" role="tabpanel">
+                <% const confirmedOrders = orders.filter(o => o.status === 'confirmed'); %>
+                <% if(confirmedOrders.length === 0) { %>
+                    <div class="alert alert-info">No confirmed bookings yet.</div>
+                <% } else { %>
+                    <% confirmedOrders.forEach(order => { %>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <img src="<%= order.listing.image.url %>" alt="<%= order.listing.title %>" class="img-fluid rounded" style="height: 150px; object-fit: cover;">
+                                    </div>
+                                    <div class="col-md-5">
+                                        <h5 class="mb-2"><%= order.listing.title %></h5>
+                                        <p class="text-muted mb-2">
+                                            <i class="fas fa-map-marker-alt"></i> 
+                                            <%= order.listing.location %>
+                                        </p>
+                                        <p class="mb-1">
+                                            <strong>Check-in:</strong> <%= new Date(order.checkInDate).toLocaleDateString() %>
+                                        </p>
+                                        <p class="mb-0">
+                                            <strong>Check-out:</strong> <%= new Date(order.checkOutDate).toLocaleDateString() %>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <strong>Status:</strong><br>
+                                            <span class="badge bg-success">Confirmed</span>
+                                        </div>
+                                        <div>
+                                            <strong>Total:</strong><br>
+                                            <h6 class="text-success">$<%= order.totalPrice %></h6>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 text-end">
+                                        <a href="/payment/confirm/<%= order._id %>" class="btn btn-sm btn-outline-primary mb-2 w-100">
+                                            View Details
+                                        </a>
+                                        <form method="POST" action="/payment/<%= order._id %>/cancel" onsubmit="return confirm('Cancel this booking?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                                                Cancel
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } %>
+            </div>
+
+            <!-- Pending Bookings -->
+            <div class="tab-pane fade" id="pending-content" role="tabpanel">
+                <% const pendingOrders = orders.filter(o => o.status === 'pending'); %>
+                <% if(pendingOrders.length === 0) { %>
+                    <div class="alert alert-info">No pending bookings.</div>
+                <% } else { %>
+                    <% pendingOrders.forEach(order => { %>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-2">
+                                        <img src="<%= order.listing.image.url %>" alt="<%= order.listing.title %>" class="img-fluid rounded" style="height: 150px; object-fit: cover;">
+                                    </div>
+                                    <div class="col-md-5">
+                                        <h5 class="mb-2"><%= order.listing.title %></h5>
+                                        <p class="text-muted mb-2">
+                                            <i class="fas fa-clock"></i> 
+                                            Waiting for payment
+                                        </p>
+                                        <p class="mb-1">
+                                            <strong>Total Amount:</strong> $<%= order.totalPrice %>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-5 text-end">
+                                        <a href="/payment/confirm/<%= order._id %>" class="btn btn-primary">
+                                            <i class="fas fa-credit-card"></i> Complete Payment
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } %>
+            </div>
+
+            <!-- Cancelled Bookings -->
+            <div class="tab-pane fade" id="cancelled-content" role="tabpanel">
+                <% const cancelledOrders = orders.filter(o => o.status === 'cancelled'); %>
+                <% if(cancelledOrders.length === 0) { %>
+                    <div class="alert alert-info">No cancelled bookings.</div>
+                <% } else { %>
+                    <% cancelledOrders.forEach(order => { %>
+                        <div class="card mb-3 opacity-75">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <img src="<%= order.listing.image.url %>" alt="<%= order.listing.title %>" class="img-fluid rounded" style="height: 150px; object-fit: cover; opacity: 0.7;">
+                                    </div>
+                                    <div class="col-md-7">
+                                        <h5 class="mb-2"><%= order.listing.title %></h5>
+                                        <p class="text-muted mb-2">
+                                            <i class="fas fa-check-circle text-success"></i> 
+                                            Booking was cancelled
+                                        </p>
+                                        <p class="mb-1">
+                                            <strong>Cancelled Date:</strong> <%= new Date(order.updatedAt).toLocaleDateString() %>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-3 text-end">
+                                        <a href="/payment/confirm/<%= order._id %>" class="btn btn-sm btn-outline-secondary">
+                                            View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } %>
+            </div>
+        </div>
+    <% } %>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">

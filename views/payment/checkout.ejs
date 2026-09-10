@@ -1,0 +1,246 @@
+<%- layout('layouts/boilerplate') %>
+
+<div class="container my-5">
+    <div class="row">
+        <!-- Order Summary -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <img src="<%= listing.image.url %>" class="card-img-top" alt="<%= listing.title %>">
+                <div class="card-body">
+                    <h5 class="card-title"><%= listing.title %></h5>
+                    <p class="card-text"><%= listing.description %></p>
+                    <p class="text-muted"><%= listing.location %>, <%= listing.country %></p>
+                    
+                    <div class="booking-details mt-4">
+                        <h6>Booking Details</h6>
+                        <p>
+                            <strong>Check-in:</strong> <%= new Date(checkInDate).toLocaleDateString() %>
+                        </p>
+                        <p>
+                            <strong>Check-out:</strong> <%= new Date(checkOutDate).toLocaleDateString() %>
+                        </p>
+                        <p>
+                            <strong>Number of Nights:</strong> <%= numberOfNights %>
+                        </p>
+                        <hr>
+                        <p>
+                            <strong>Price per Night:</strong> $<%= listing.price %>
+                        </p>
+                        <p>
+                            <strong>Subtotal:</strong> $<%= listing.price * numberOfNights %>
+                        </p>
+                        <p class="text-success">
+                            <strong>Service Fee:</strong> $0 (Free)
+                        </p>
+                        <h5 class="mt-3">
+                            <strong>Total:</strong> $<%= totalPrice %>
+                        </h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Guest Information & Payment Form -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Guest Information & Payment</h5>
+
+                    <form id="checkoutForm">
+                        <!-- Guest Information -->
+                        <div class="mb-3">
+                            <label for="guestName" class="form-label">Full Name</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="guestName" 
+                                name="guestName" 
+                                required
+                            >
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="guestEmail" class="form-label">Email</label>
+                            <input 
+                                type="email" 
+                                class="form-control" 
+                                id="guestEmail" 
+                                name="guestEmail" 
+                                value="<%= currentUser ? currentUser.email : '' %>"
+                                required
+                            >
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="guestPhone" class="form-label">Phone Number</label>
+                            <input 
+                                type="tel" 
+                                class="form-control" 
+                                id="guestPhone" 
+                                name="guestPhone" 
+                                required
+                            >
+                        </div>
+
+                        <h6 class="mt-4 mb-3">Address</h6>
+
+                        <div class="mb-3">
+                            <label for="guestAddress" class="form-label">Street Address</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="guestAddress" 
+                                name="guestAddress" 
+                                required
+                            >
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="guestCity" class="form-label">City</label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="guestCity" 
+                                    name="guestCity" 
+                                    required
+                                >
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="guestState" class="form-label">State/Province</label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="guestState" 
+                                    name="guestState" 
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="guestZipCode" class="form-label">ZIP/Postal Code</label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="guestZipCode" 
+                                    name="guestZipCode" 
+                                    required
+                                >
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="guestCountry" class="form-label">Country</label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="guestCountry" 
+                                    name="guestCountry" 
+                                    value="<%= listing.country %>"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Hidden fields for dates -->
+                        <input type="hidden" name="checkInDate" value="<%= checkInDate %>">
+                        <input type="hidden" name="checkOutDate" value="<%= checkOutDate %>">
+                        <input type="hidden" name="numberOfNights" value="<%= numberOfNights %>">
+
+                        <h6 class="mt-4 mb-3">Payment Method</h6>
+
+                        <!-- Stripe Card Element -->
+                        <div id="card-element" class="form-control" style="height: 40px; padding: 10px; border: 1px solid #ced4da;"></div>
+                        <div id="card-errors" class="text-danger mt-2"></div>
+
+                        <button type="submit" class="btn btn-success btn-lg w-100 mt-4" id="submitBtn">
+                            Pay $<%= totalPrice %>
+                        </button>
+                    </form>
+
+                    <a href="/listings/<%= listing._id %>" class="btn btn-outline-secondary w-100 mt-2">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    const stripe = Stripe('<%= process.env.STRIPE_PUBLIC_KEY %>');
+    const elements = stripe.elements();
+    const cardElement = elements.create('card');
+    cardElement.mount('#card-element');
+
+    // Handle card errors
+    cardElement.on('change', (event) => {
+        const displayError = document.getElementById('card-errors');
+        if (event.error) {
+            displayError.textContent = event.error.message;
+        } else {
+            displayError.textContent = '';
+        }
+    });
+
+    // Handle form submission
+    document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Processing...';
+
+        const formData = new FormData(document.getElementById('checkoutForm'));
+        const data = Object.fromEntries(formData);
+
+        try {
+            // Create order and payment intent
+            const response = await fetch('/payment/<%= listing._id %>/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Payment setup failed');
+            }
+
+            // Confirm payment with card
+            const { error, paymentIntent } = await stripe.confirmCardPayment(result.clientSecret, {
+                payment_method: {
+                    card: cardElement,
+                    billing_details: {
+                        name: data.guestName,
+                        email: data.guestEmail,
+                        address: {
+                            line1: data.guestAddress,
+                            city: data.guestCity,
+                            state: data.guestState,
+                            postal_code: data.guestZipCode,
+                            country: 'US'
+                        }
+                    }
+                }
+            });
+
+            if (error) {
+                document.getElementById('card-errors').textContent = error.message;
+                submitBtn.disabled = false;
+                submitBtn.textContent = `Pay $<%= totalPrice %>`;
+            } else if (paymentIntent.status === 'succeeded') {
+                // Redirect to confirmation page
+                window.location.href = `/payment/confirm/${result.orderId}`;
+            }
+        } catch (err) {
+            document.getElementById('card-errors').textContent = err.message;
+            submitBtn.disabled = false;
+            submitBtn.textContent = `Pay $<%= totalPrice %>`;
+        }
+    });
+</script>
