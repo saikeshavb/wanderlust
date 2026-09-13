@@ -24,9 +24,14 @@ const passport=require("passport");
 const LocalStrategy=require("passport-local");
 const User=require("./models/user.js");
 const dbUrl=process.env.ATLASDB_URL;
+const requestMetrics = require("./metrics/requestMetrics");
+const { startSystemMetrics } = require("./metrics/systemMetrics");
+
 
 app.set("view engine","ejs");
 app.set("views",path.join(__dirname,"views"));
+app.use(requestMetrics);
+startSystemMetrics();
 app.use(express.urlencoded({extended:true}));
 app.use(methodOverride("_method"));
 app.engine('ejs',ejsMate);
@@ -34,13 +39,27 @@ app.use(express.static(path.join(__dirname,"/public")));
 
 async function main(){
     await mongoose.connect(dbUrl);
+
+    const db = mongoose.connection;
+
+    db.on("connected", () => {
+        console.log("[MONGO] Connected");
+    });
+
+    db.on("disconnected", () => {
+        console.log("[MONGO] Disconnected");
+    });
+
+    db.on("error", (err) => {
+        console.log("[MONGO] Error:", err.message);
+    });
 }
 main().then(()=>{
     console.log("Connected to DB");
 }).catch((err)=>{
     console.log(err);
 });
-
+console.log("[MONGO] Ready state:", mongoose.connection.readyState);
 // app.get("/testListing",async (req,res)=>{
 //     let sampleListing=new Listing({
 //         title:"My New Villa",

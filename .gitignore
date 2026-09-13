@@ -3,3 +3,6 @@
 node_modules/
 **/.DS_Store
 # ignore in every repository(**/)
+# Performance test output
+performance/results/*.json
+performance/results/*.csv

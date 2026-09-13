@@ -13,10 +13,56 @@ const mapToken=process.env.MAP_TOKEN;
 const geocodingClient = mbxGeocoding({ accessToken:mapToken });
 
 //index route
-router.get("/",wrapAsync(async (req,res)=>{
-    let allLists=await Listing.find({});
-    res.render("listings/index.ejs",{allLists});
-}))
+// router.get("/",wrapAsync(async (req,res)=>{
+//     let allLists=await Listing.find({});
+//     res.render("listings/index.ejs",{allLists});
+// }))
+router.get("/", wrapAsync(async (req, res) => {
+    const requestStart = process.hrtime.bigint();
+
+    const dbStart = process.hrtime.bigint();
+
+    const allLists = await Listing.find({}).lean();
+
+    const dbEnd = process.hrtime.bigint();
+
+    const dbDurationMs =
+        Number(dbEnd - dbStart) / 1_000_000;
+
+    console.log(
+        `[DB] Listing.find({}) ${dbDurationMs.toFixed(2)}ms`
+    );
+
+    const renderStart = process.hrtime.bigint();
+
+    res.render("listings/index.ejs", { allLists }, (err, html) => {
+        if (err) {
+            throw err;
+        }
+
+        const renderEnd = process.hrtime.bigint();
+
+        const renderDurationMs =
+            Number(renderEnd - renderStart) / 1_000_000;
+
+        console.log(
+            `[RENDER] listings/index.ejs ` +
+            `${renderDurationMs.toFixed(2)}ms`
+        );
+
+        res.send(html);
+
+        const requestEnd = process.hrtime.bigint();
+
+        const requestDurationMs =
+            Number(requestEnd - requestStart) / 1_000_000;
+
+        console.log(
+            `[TOTAL] listings route ` +
+            `${requestDurationMs.toFixed(2)}ms`
+        );
+    });
+}));
 //new route
 router.get("/new",isLoggedIn,(req,res)=>{
     res.render("listings/new.ejs");
