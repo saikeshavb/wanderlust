@@ -38,7 +38,12 @@ app.engine('ejs',ejsMate);
 app.use(express.static(path.join(__dirname,"/public")));
 
 async function main(){
-    await mongoose.connect(dbUrl);
+    await mongoose.connect(dbUrl, {
+        maxPoolSize: 50,
+        minPoolSize: 5,
+        maxIdleTimeMS: 30000,
+        serverSelectionTimeoutMS: 5000,
+    });
 
     const db = mongoose.connection;
 
@@ -81,8 +86,8 @@ const store=MongoStore.create({
     touchAfter:24*3600,
 })
 
-store.on("error",()=>{
-    console.log("Error in Mongo Session Store: ",err);
+store.on("error",(err)=>{
+    console.log("Error in Mongo Session Store: ",err.message);
 })
 
 const sessionOptions={
