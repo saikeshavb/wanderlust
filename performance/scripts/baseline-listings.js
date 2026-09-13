@@ -3,20 +3,10 @@ import { check } from "k6";
 
 export const options = {
     scenarios: {
-        listings_concurrency: {
-            executor: "ramping-vus",
-            startVUs: 0,
-            stages: [
-                { duration: "10s", target: 10 },
-                { duration: "20s", target: 10 },
-
-                { duration: "10s", target: 25 },
-                { duration: "30s", target: 25 },
-
-                { duration: "10s", target: 50 },
-                { duration: "30s", target: 50 },
-            ],
-            gracefulRampDown: "5s",
+        listings_25vus: {
+            executor: "constant-vus",
+            vus: 25,
+            duration: "60s",
         },
     },
 };
